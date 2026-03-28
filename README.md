@@ -4,8 +4,8 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 
 ##  Características
 * Extracción de texto plano de archivos PDF.
-* ]Interfaz de línea de comandos (CLI).
-* ]Gestión de dependencias mediante entornos virtuales.
+* Interfaz de línea de comandos (CLI).
+* Gestión de dependencias mediante entornos virtuales.
 * Arquitectura orientada a la mantenibilidad y código limpio.
 
 ##  Tecnologías y Herramientas
