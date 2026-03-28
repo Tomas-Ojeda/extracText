@@ -4,18 +4,18 @@
 
 ##  Características
 * Extracción de texto plano de archivos PDF.
-* [cite_start]Interfaz de línea de comandos (CLI)[cite: 22].
-* [cite_start]Gestión de dependencias mediante entornos virtuales[cite: 19].
-* [cite_start]Arquitectura orientada a la mantenibilidad y código limpio[cite: 10, 11].
+* ]Interfaz de línea de comandos (CLI).
+* ]Gestión de dependencias mediante entornos virtuales.
+* Arquitectura orientada a la mantenibilidad y código limpio.
 
-## 🛠️ Tecnologías y Herramientas
+##  Tecnologías y Herramientas
 * **Lenguaje:** Python 3.x
 * **Librerías:** PyMuPDF (fitz)
-* [cite_start]**Control de Versiones:** Git & GitHub [cite: 10]
+* [cite_start]**Control de Versiones:** Git & GitHub
 * **Entorno de Desarrollo:** Visual Studio Code
 
-## 📋 Requisitos e Instalación
-Para replicar el entorno de desarrollo siguiendo las buenas prácticas de la materia[cite: 10, 19]:
+##  Requisitos e Instalación
+Para replicar el entorno de desarrollo siguiendo las buenas prácticas de la materia:
 
 1. **Clonar el repositorio:**
    ```bash
