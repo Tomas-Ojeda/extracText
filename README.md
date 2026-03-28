@@ -11,7 +11,7 @@
 ##  Tecnologías y Herramientas
 * **Lenguaje:** Python 3.x
 * **Librerías:** PyMuPDF (fitz)
-* [cite_start]**Control de Versiones:** Git & GitHub
+* **Control de Versiones:** Git & GitHub
 * **Entorno de Desarrollo:** Visual Studio Code
 
 ##  Requisitos e Instalación
