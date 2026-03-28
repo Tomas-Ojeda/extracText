@@ -1,8 +1,8 @@
-# 📄 extracText - Extractor de Texto PDF
+#  extracText - Extractor de Texto PDF
 
 [cite_start]Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - UTN). El objetivo es crear una herramienta eficiente en Python para la extracción y procesamiento de texto desde archivos PDF.
 
-## 🚀 Características
+##  Características
 * Extracción de texto plano de archivos PDF.
 * [cite_start]Interfaz de línea de comandos (CLI)[cite: 22].
 * [cite_start]Gestión de dependencias mediante entornos virtuales[cite: 19].
@@ -15,7 +15,7 @@
 * **Entorno de Desarrollo:** Visual Studio Code
 
 ## 📋 Requisitos e Instalación
-[cite_start]Para replicar el entorno de desarrollo siguiendo las buenas prácticas de la materia[cite: 10, 19]:
+Para replicar el entorno de desarrollo siguiendo las buenas prácticas de la materia[cite: 10, 19]:
 
 1. **Clonar el repositorio:**
    ```bash
