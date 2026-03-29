@@ -2,6 +2,11 @@
 
 Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - UTN - FRSR). El objetivo es crear una herramienta eficiente en Python para la extracción y procesamiento de texto desde archivos PDF.
 
+## Integrantes
+* **Sirotiuk Juliana**
+* **Jamardo Camila**
+* **Ojeda Tomas**
+
 ##  Características
 * Extracción de texto plano de archivos PDF.
 * Interfaz de línea de comandos (CLI).
@@ -14,9 +19,5 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 * **Control de Versiones:** Git & GitHub
 * **Entorno de Desarrollo:** Visual Studio Code
 
-##  Requisitos e Instalación
-Para replicar el entorno de desarrollo siguiendo las buenas prácticas de la materia:
-
-1. **Clonar el repositorio:**
-   ```bash
-   git clone [https://github.com/Tomas-Ojeda/extracText.git](https://github.com/Tomas-Ojeda/extracText.git)
+---
+*UTN - Facultad Regional San Rafael - Desarrollo de Software - Ingeniería en Sistemas de Información - 2026*
