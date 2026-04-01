@@ -3,9 +3,9 @@
 Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - UTN - FRSR). El objetivo es crear una herramienta eficiente en Python para la extracción y procesamiento de texto desde archivos PDF.
 
 ## Integrantes
-* **Sirotiuk Juliana**
-* **Jamardo Camila**
-* **Ojeda Tomas**
+* **Sirotiuk Juliana 10939** 
+* **Jamardo Camila 10842**
+* **Ojeda Tomas 10882**
 
 ##  Características
 * Extracción de texto plano de archivos PDF.
