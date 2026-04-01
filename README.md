@@ -25,8 +25,4 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 * **Si se necesita extraer tablas** pdfplumber, Camelot, Tabula-py
 
 ---
-*UTN - Facultad Regional San Rafael - Desarrollo de Software - Ingeniería en Sistemas de Información - 2026*
-
-*test*
-*test2*
-*lalalal*
+*UTN - Facultad Regional San Rafael - Tercer año - Desarrollo de Software - Ingeniería en Sistemas de Información - 2026*
