@@ -24,5 +24,11 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 * **Si el PDF esta escaneado (imagenes)** pytesseract + pdf2image  
 * **Si se necesita extraer tablas** pdfplumber, Camelot, Tabula-py
 
+## Codigo limpio
+* **DRY - Don't Repeat Yoursefl** Evitar duplicación de codigo y lógica innecesaria.
+* **KISS - Keep It Simple, Stupid** Mantener el código simple y claro, sin complejidades innecesarias.  
+* **YAGANI - You Aren't Gonna Need It** Programar únicamente lo que es necesario.
+
+
 ---
 *UTN - Facultad Regional San Rafael - Tercer año - Desarrollo de Software - Ingeniería en Sistemas de Información - 2026*
