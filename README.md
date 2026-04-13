@@ -16,13 +16,13 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 ##  Tecnologías y Herramientas
 * **Lenguaje:** Python 
 * **Librerías:** PyMuPDF (fitz)
-* **Control de Versiones:** Git & GitHub
+* **Control de Versiones:** Git & GitHub 
 * **Entorno de Desarrollo:** Visual Studio Code
 
 ## Librerias a tener en cuenta para extraer PDF
 * **Si el PDF tiene texto seleccionable** pdfplumber, PyMuPDF, pypdf
 * **Si el PDF esta escaneado (imagenes)** pytesseract + pdf2image  
-* **Si se necesita extraer tablas** pdfplumber, Camelot, Tabula-py
+* **Si se necesita extraer tablas** pdfplumber, Camelot, Tabula-py mmmmmmm
 
 ## Codigo limpio
 * **DRY - Don't Repeat Yoursefl** Evitar duplicación de codigo y lógica innecesaria.
