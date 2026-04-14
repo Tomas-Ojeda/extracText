@@ -19,10 +19,17 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 * **Control de Versiones:** Git & GitHub 
 * **Entorno de Desarrollo:** Visual Studio Code
 
-## Librerias a tener en cuenta para extraer PDF
+## Librerías para el procesamiento de PDFs
 * **Si el PDF tiene texto seleccionable** pdfplumber, PyMuPDF, pypdf
+    *  pdfplumber  -->  Permite obtener texto de forma estructurada y detectar elementos como tablas y columnas. 
+    *  PyMuPDF  -->  Permite extraer textos e imágenes, renderizar pags. y realizar modificaciones sobre archivos.
+    *  pypdf  -->  Permite unir, dividir y rotar pags., y gestionar metadatos.
 * **Si el PDF esta escaneado (imagenes)** pytesseract + pdf2image  
-* **Si se necesita extraer tablas** pdfplumber, Camelot, Tabula-py mmmmmmm
+    *  pytesseract + pdf2image -->  Juntos, permiten procesar archivos PDF escaneados. pdf2image convierte cada pág.
+       en una imagen y pytesseract aplica técnicas OCR (reconocimiento óptico de caracteres) para extraer el texto.
+* **Si se necesita extraer tablas** pdfplumber, Camelot
+    *  Camelot  -->  Permite detectar tablas precisamente cuando estan bien definidas en el doc. y permite exportar 
+       los datos a formatos como CSV o DataFrame.
 
 ## Requisitos del Proyecto (12 Factor App - sugeridos en clase)
 * **Codebase** Se debe contar con una única base de código, versionada en un repositorio.
