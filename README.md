@@ -48,6 +48,12 @@ como recursos intercambiables.
 * **DRY - Don't Repeat Yoursefl** Evitar duplicación de codigo y lógica innecesaria.
 * **KISS - Keep It Simple, Stupid** Mantener el código simple y claro, sin complejidades innecesarias.  
 * **YAGANI - You Aren't Gonna Need It** Programar únicamente lo que es necesario.
+* **SOLID -** Busca que el código sea como un juego de LEGO: piezas independientes que encajan perfectamente y que puedas cambiar sin tener que romper toda la estructura. Explicamos su siglas a continuación...
+* **-S (Responsabilidad única)** Una clase debe hacer una sola cosa.
+* **-O (Abierto/Cerrado)** El código se debe poder ampliar, pero no mmodificar.
+* **-L(Sustitución de Liskov)** Una clase hija debe poder usarse en lugar de su padre sin romper nada.
+* **-I (Segregación de interfaces)** es mejor tener muchas interfaces pequeñas que una gigande con metodos que no se usan
+* **-D(Inversión de Dependencias)** No dependes de clases concretas, depende de abstracciones (interfaces).
 
 ## extracText - GUÍA DE INSTALACIÓN
 
