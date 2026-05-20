@@ -13,11 +13,6 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 * Gestión de dependencias mediante entornos virtuales.
 * Arquitectura orientada a la mantenibilidad y código limpio.
 
-##  Tecnologías y Herramientas
-* **Lenguaje:** Python 
-* **Librerías:** Pypdf (fitz)
-* **Control de Versiones:** Git & GitHub 
-* **Entorno de Desarrollo:** Visual Studio Code
 
 ## Librerías para el procesamiento de PDFs
 * **Si el PDF tiene texto seleccionable**
@@ -81,7 +76,9 @@ Está construida siguiendo arquitectura empresarial en capas, TDD (Test-Driven D
 
 Herramienta | Uso |
 |---|---|
-| Python 3.12 | Lenguaje principal |
+| Python | Lenguaje principal |
+| Control de versiones | Git & GitHub |
+| Entorno de Desarrollo | Visual Studio Code |
 | FastAPI + Uvicorn | Framework web y servidor ASGI |
 | pypdf | Extracción de texto de PDFs |
 | Motor (async MongoDB) | Persistencia de documentos |
