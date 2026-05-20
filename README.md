@@ -23,7 +23,7 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 * **Si el PDF tiene texto seleccionable**
     *  pypdf  -->  Permite unir, dividir y rotar pags., y gestionar metadatos.
 
-## Proxima posibles funcionalidades (luego revisar)
+## Próximas posibles funcionalidades (luego revisar)
 * **Si el PDF esta escaneado (imagenes)** pytesseract + pdf2image  
     *  pytesseract + pdf2image -->  Juntos, permiten procesar archivos PDF escaneados. pdf2image convierte cada pág.
        en una imagen y pytesseract aplica técnicas OCR (reconocimiento óptico de caracteres) para extraer el texto.
@@ -75,7 +75,21 @@ Esta aplicación permite a los usuarios:
 
 Está construida siguiendo arquitectura empresarial en capas, TDD (Test-Driven Development), y principios YAGNI, DRY, KISS, SOLID, ya explicados anteoriormente.
 
---- 
+---
+
+## Tecnologías
+
+Herramienta | Uso |
+|---|---|
+| Python 3.12 | Lenguaje principal |
+| FastAPI + Uvicorn | Framework web y servidor ASGI |
+| pypdf | Extracción de texto de PDFs |
+| Motor (async MongoDB) | Persistencia de documentos |
+| pytest + pytest-asyncio | Testing con cobertura |
+| uv | Gestión de dependencias |
+| Docker | Contenedor de MongoDB |
+
+---
 
 ## Estructura del Proyecto 
 ```
