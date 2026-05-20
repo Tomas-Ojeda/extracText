@@ -20,10 +20,10 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 * **Entorno de Desarrollo:** Visual Studio Code
 
 ## Librerías para el procesamiento de PDFs
-* **Si el PDF tiene texto seleccionable** pdfplumber, PyMuPDF, pypdf
-    *  pdfplumber  -->  Permite obtener texto de forma estructurada y detectar elementos como tablas y columnas. 
-    *  PyMuPDF  -->  Permite extraer textos e imágenes, renderizar pags. y realizar modificaciones sobre archivos.
+* **Si el PDF tiene texto seleccionable**
     *  pypdf  -->  Permite unir, dividir y rotar pags., y gestionar metadatos.
+
+## Proxima posibles funcionalidades (luego revisar)
 * **Si el PDF esta escaneado (imagenes)** pytesseract + pdf2image  
     *  pytesseract + pdf2image -->  Juntos, permiten procesar archivos PDF escaneados. pdf2image convierte cada pág.
        en una imagen y pytesseract aplica técnicas OCR (reconocimiento óptico de caracteres) para extraer el texto.
@@ -55,7 +55,7 @@ como recursos intercambiables.
 * **-I (Segregación de interfaces)** es mejor tener muchas interfaces pequeñas que una gigande con metodos que no se usan
 * **-D(Inversión de Dependencias)** No dependes de clases concretas, depende de abstracciones (interfaces).
 
-## extracText - GUÍA DE INSTALACIÓN
+## GUÍA DE INSTALACIÓN
 
 Extractor de texto de archivos PDF con persistencia en MongoDB.
 
@@ -74,6 +74,26 @@ Esta aplicación permite a los usuarios:
 - **Gestionar documentos** — CRUD completo: obtener, listar, actualizar y eliminar documentos
 
 Está construida siguiendo arquitectura empresarial en capas, TDD (Test-Driven Development), y principios YAGNI, DRY, KISS, SOLID, ya explicados anteoriormente.
+
+--- 
+
+## Estructura del Proyecto 
+```
+extracText/
+├── app/
+│   ├── api/                 #Routers de FastAPI (Capa de presentación)
+│   ├── application/         #Casos de Uso (orquestation)
+│   ├── domain/              #Entidades y excepciones (reglas de negocio)
+│   ├── infrastructure/      #MongoDB, servicios concretos
+├── config/                  #Configuracion de la app
+├── test/                    #Test automatizados
+├── .env.example             #Variables de entorno de ejemplo
+├── pyproject.toml           #Dependencias y configuración
+└── README.md
+```
+
+---
+
 
 ## Arquitectura
 
