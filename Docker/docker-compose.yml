@@ -1,0 +1,28 @@
+services:
+
+  mongo:
+    image: mongo:7
+    container_name: extractext_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: extractext_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      MONGODB_URL: mongodb://extractext_mongo:27017
+      MONGODB_DB_NAME: extractext
+      PDF_MAX_SIZE_MB: 10
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
