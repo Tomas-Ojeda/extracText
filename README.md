@@ -18,13 +18,6 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 * **Si el PDF tiene texto seleccionable**
     *  pypdf  -->  Permite unir, dividir y rotar pags., y gestionar metadatos.
 
-## Próximas posibles funcionalidades (luego revisar)
-* **Si el PDF esta escaneado (imagenes)** pytesseract + pdf2image  
-    *  pytesseract + pdf2image -->  Juntos, permiten procesar archivos PDF escaneados. pdf2image convierte cada pág.
-       en una imagen y pytesseract aplica técnicas OCR (reconocimiento óptico de caracteres) para extraer el texto.
-* **Si se necesita extraer tablas** pdfplumber, Camelot
-    *  Camelot  -->  Permite detectar tablas precisamente cuando estan bien definidas en el doc. y permite exportar 
-       los datos a formatos como CSV o DataFrame.
 
 ## Requisitos del Proyecto (12 Factor App - sugeridos en clase)
 * **Codebase** Se debe contar con una única base de código, versionada en un repositorio.
