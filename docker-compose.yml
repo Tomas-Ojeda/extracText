@@ -1,5 +1,23 @@
 services:
 
+  traefik:
+    image: traefik:v3.1
+    container_name: extractext_traefik
+    restart: unless-stopped
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"   # solo para dev local, ver nota abajo
+    ports:
+      - "80:80"
+      - "8080:8080"   # dashboard de Traefik (http://localhost:8080)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - extractext_net
+
   mongo:
     image: mongo:7
     container_name: extractext_mongo
@@ -8,6 +26,8 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    networks:
+      - extractext_net
 
   app:
     build:
@@ -15,14 +35,23 @@ services:
       dockerfile: docker/Dockerfile
     container_name: extractext_app
     restart: unless-stopped
-    ports:
-      - "8000:8000"
     environment:
       MONGODB_URL: mongodb://extractext_mongo:27017
       MONGODB_DB_NAME: extractext
       PDF_MAX_SIZE_MB: 10
     depends_on:
       - mongo
+    networks:
+      - extractext_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.extractext.rule=Host(`extractext.localhost`)"
+      - "traefik.http.routers.extractext.entrypoints=web"
+      - "traefik.http.services.extractext.loadbalancer.server.port=8000"
 
 volumes:
   mongo_data:
+
+networks:
+  extractext_net:
+    driver: bridge
