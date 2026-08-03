@@ -1,7 +1,7 @@
 services:
 
   traefik:
-    image: traefik:v3.1
+    image: traefik:v3.6
     container_name: extractext_traefik
     restart: unless-stopped
     command:
@@ -9,12 +9,12 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--api.dashboard=true"
-      - "--api.insecure=true"   # solo para dev local, ver nota abajo
+      - "--api.insecure=true"
     ports:
       - "80:80"
-      - "8080:8080"   # dashboard de Traefik (http://localhost:8080)
+      - "8080:8080"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - extractext_net
 
@@ -31,8 +31,8 @@ services:
 
   app:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
+      dockerfile: dockerfile
     container_name: extractext_app
     restart: unless-stopped
     environment:
