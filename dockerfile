@@ -1,7 +1,8 @@
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    UV_CACHE_DIR=/app/.cache/uv
 
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
