@@ -39,6 +39,7 @@ services:
       MONGODB_URL: mongodb://extractext_mongo:27017
       MONGODB_DB_NAME: extractext
       PDF_MAX_SIZE_MB: 10
+      UV_CACHE_DIR: /tmp/uv-cache
     depends_on:
       - mongo
     networks:

@@ -7,7 +7,7 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 * **Jamardo Camila 10842**
 * **Ojeda Tomas 10882**
 
-##  Características
+## Características
 * Extracción de texto plano de archivos PDF.
 * Interfaz de línea de comandos (CLI).
 * Gestión de dependencias mediante entornos virtuales.
@@ -77,7 +77,9 @@ Herramienta | Uso |
 | Motor (async MongoDB) | Persistencia de documentos |
 | pytest + pytest-asyncio | Testing con cobertura |
 | uv | Gestión de dependencias |
-| Docker | Contenedor de MongoDB |
+| Docker + Docker Compose | Orquestación de contenedores (app, MongoDB, proxy) |
+| Traefik | Reverse proxy / enrutamiento local |
+| mkcert | Certificados HTTPS para desarrollo local |
 
 ---
 
@@ -91,6 +93,9 @@ extracText/
 │   ├── infrastructure/      #MongoDB, servicios concretos
 ├── config/                  #Configuracion de la app
 ├── test/                    #Test automatizados
+├── certs/                   #Certificados HTTPS locales (mkcert)
+├── docker-compose.yml       #Orquestación de app + mongo + traefik
+├── dockerfile               #Imagen de la app
 ├── .env.example             #Variables de entorno de ejemplo
 ├── pyproject.toml           #Dependencias y configuración
 └── README.md
@@ -127,6 +132,9 @@ Antes de instalar, nos aseguramos de tener:
 - **Python 3.12+** — [Descargar](https://www.python.org/downloads/)
 - **Docker Desktop** — [Descargar](https://www.docker.com/products/docker-desktop/)
 - **Git** — [Descargar](https://git-scm.com/)
+- **mkcert** — para generar certificados HTTPS locales
+
+> Con el enfoque actual (Docker Compose) **no hace falta instalar Python ni `uv` en tu máquina** — todo corre dentro de los contenedores. Si preferís desarrollar sin Docker, dejamos esa alternativa al final de esta guía.
 
 ### Para verificar la instalación:
 
@@ -154,6 +162,129 @@ git clone https://github.com/TU_USUARIO/extracText.git
 cd extracText
 ```
 
+### **Instalar mkcert**
+Windows:
+
+```bash
+winget install Filosottile.mkcert
+```
+Verificar con:
+
+```bash
+mkcert -version
+```
+
+### **Generar el certificado HTTPS local**
+
+```bash
+mkcert -install
+mkcert -cert-file certs/cert.pem -key-file certs/key.pem "extractext.localhost"
+```
+
+### **Agregar el dominio local al archivo hosts**
+Abrir como **administrador** el Bloc de notas (clic derecho → "Ejecutar como administrador"), abrir:
+
+```
+C:\Windows\System32\drivers\etc\hosts
+```
+
+y agregar al final:
+
+```
+127.0.0.1    extractext.localhost
+```
+
+Guardar el archivo.
+
+### **Configuramos variables de entorno**
+
+```bash
+cp .env.example .env
+```
+
+El archivo `.env` contiene configuraciones como:
+```ini
+APP_NAME=extracText
+MONGODB_URL=mongodb://localhost:27017
+MONGODB_DB_NAME=extractext
+PDF_MAX_SIZE_MB=10
+```
+
+Si querés cambiar algo, editá el `.env` (opcional).
+
+### **Levantar el proyecto completo**
+
+Abrí Docker Desktop (buscalo en el menú Inicio, esperamos a que la ballena esté corriendo).
+
+Después en PowerShell/terminal:
+
+```bash
+docker compose up -d --build
+```
+
+Esto levanta 3 contenedores conectados entre sí por una **red Docker compartida** (`extractext_net`):
+
+| Servicio | Descripción |
+|---|---|
+| `mongo` | Base de datos Mongo DB |
+| `app` | API (FastAPI) del proyecto |
+| `traefik` | Proxy que enruta `extractext.localhost` hacia la app |
+
+### **Verificar que todo está corriendo**
+
+```bash
+docker compose ps
+```
+
+Los 3 servicios deben figurar con estado `Up` (ninguno en `Restarting`)
+
+### **Acceder a la interfaz web**
+Abir el navegador en:
+
+```
+http://extractext.localhost/docs
+```
+
+Verás el **Swagger UI** — una interfaz interactiva para probar todos los endpoints.
+
+## Comandos útiles
+| Acción | Comando |
+|---|---|
+| Levantar todo | `docker compose up -d --build` |
+| Apagar todo | `docker compose down` |
+| Apagar y borrar también los datos de Mongo | `docker compose down -v` |
+| Ver contenedores corriendo | `docker compose logs -f app` |
+| Ver logs de todo | `docker compose logs -f` |
+| Ver logs de un servidor puntual | `docker compose restart -f app` |
+| Reiniciar un servidor puntual | `docker compose restart app` |
+| Deshboard de Traefik | `http://localhost:8080` |
+
+## Actualizar el proyecto (traer cambios del equipo)
+
+No alcanza solo con `git pull`, porque puede haber cambios en `docker-compose.yml` o el `dockerfile` que requieren 
+reconstruir las imágenes:
+
+```bash
+git pull origin main
+docker compose down
+docker compose up -d --build
+```
+
+---
+
+## Conexión con el navegador 
+1. Confirmá que Traefik está corriendo: `docker compose ps`
+2. Probá el dashboard: `http://localhost:8080`
+3. Confirmá que el dominio resuelve: `ping extractext.localhost` (debe responder `127.0.0.1`)
+4. Si no resuelve, revisá que la línea esté en el archivo `hosts` (ver paso 4 más arriba)
+
+**`{"detail":"Not Found"}` en `http://extractext.localhost`**
+No es un error: la app está funcionando. Simplemente no hay una ruta definida en `/`. Probá `http://extractext.localhost/docs`
+
+---
+
+
+## Alternativa: correr la app sin Docker (desarrollo puntual)
 ### **Instalar gestor de paquetes `uv`**
 
 `uv` es un gestor moderno y rápido de Python (alternativa a pip).
@@ -178,7 +309,6 @@ uv --version
 ```bash
 uv sync --all-extras
 ```
-
 Esto instala:
 - FastAPI y Uvicorn (servidor web)
 - MongoDB driver (Motor para async)
@@ -188,31 +318,6 @@ Esto instala:
 
 El proceso tarda ~30 segundos la primera vez.
 
-### **Configuramos variables de entorno**
-
-```bash
-cp .env.example .env
-```
-
-El archivo `.env` contiene configuraciones como:
-```ini
-APP_NAME=extracText
-MONGODB_URL=mongodb://localhost:27017
-MONGODB_DB_NAME=extractext
-PDF_MAX_SIZE_MB=10
-```
-
-Si querés cambiar algo, editá el `.env` (opcional).
-
-### **Levantar MongoDB con Docker**
-
-Abrí Docker Desktop (buscalo en el menú Inicio, esperamos a que la ballena esté corriendo).
-
-Después en PowerShell/terminal:
-
-```bash
-docker run -d -p 27017:27017 --name mongo mongo:7
-```
 
 Si ya lo corriste antes:
 ```bash
@@ -251,8 +356,6 @@ Abrí tu navegador en:
 ```
 http://127.0.0.1:8000/docs
 ```
-
-Verás el **Swagger UI** — una interfaz interactiva para probar todos los endpoints.
 
 ---
 
