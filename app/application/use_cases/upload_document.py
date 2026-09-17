@@ -1,3 +1,5 @@
+from starlette.concurrency import run_in_threadpool
+
 from app.domain.document import Document
 from app.domain.exceptions import DuplicateDocumentError, InvalidPDFError
 from app.domain.repository import AbstractDocumentRepository
@@ -23,7 +25,9 @@ class UploadDocumentUseCase:
         if existing:
             raise DuplicateDocumentError(checksum)
 
-        text = validate_and_extract_text(file_bytes, filename)
+        # CPU-bound (pypdf): se ejecuta en un thread aparte para no bloquear
+        # el event loop de asyncio mientras procesa el PDF.
+        text = await run_in_threadpool(validate_and_extract_text, file_bytes, filename)
 
         document = Document(filename=filename, content=text, checksum=checksum)
         return await self._repository.save(document)
