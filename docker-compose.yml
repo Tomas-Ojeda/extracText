@@ -29,19 +29,22 @@ services:
     networks:
       - extractext_net
 
-  app:
+  # ─────────────────────────────────────────────────────────
+  # Microservicio: API Gateway (FastAPI) - Punto de entrada
+  # ─────────────────────────────────────────────────────────
+  pdf-extractxt-api:
     build:
-      context: .
+      context: ./microservices/api-gateway
       dockerfile: dockerfile
-    container_name: extractext_app
+    image: extractext/api-gateway:latest
     restart: unless-stopped
     environment:
-      MONGODB_URL: mongodb://extractext_mongo:27017
-      MONGODB_DB_NAME: extractext
-      PDF_MAX_SIZE_MB: 10
+      EXTRACTOR_URL: http://pdf-extractxt-extractor:8000
+      STORAGE_URL: http://pdf-extractxt-storage:8000
       UV_CACHE_DIR: /tmp/uv-cache
     depends_on:
-      - mongo
+      - pdf-extractxt-extractor
+      - pdf-extractxt-storage
     networks:
       - extractext_net
     labels:
@@ -49,6 +52,41 @@ services:
       - "traefik.http.routers.extractext.rule=Host(`extractext.localhost`)"
       - "traefik.http.routers.extractext.entrypoints=web"
       - "traefik.http.services.extractext.loadbalancer.server.port=8000"
+
+  # ─────────────────────────────────────────────────────────
+  # Microservicio: PDF Extractor (FastAPI + pypdf) - Interno
+  # ─────────────────────────────────────────────────────────
+  pdf-extractxt-extractor:
+    build:
+      context: ./microservices/extractor
+      dockerfile: dockerfile
+    image: extractext/extractor:latest
+    restart: unless-stopped
+    environment:
+      PDF_MAX_SIZE_MB: 10
+      UV_CACHE_DIR: /tmp/uv-cache
+    networks:
+      - extractext_net
+
+  # ─────────────────────────────────────────────────────────
+  # Microservicio: Document Storage (FastAPI + MongoDB) - Interno
+  # ─────────────────────────────────────────────────────────
+  pdf-extractxt-storage:
+    build:
+      context: ./microservices/storage
+      dockerfile: dockerfile
+    image: extractext/storage:latest
+    restart: unless-stopped
+    environment:
+      MONGODB_URL: mongodb://extractext_mongo:27017
+      MONGODB_DB_NAME: extractext
+      UV_CACHE_DIR: /tmp/uv-cache
+    depends_on:
+      - mongo
+    networks:
+      - extractext_net
+    deploy:
+      replicas: 3
 
 volumes:
   mongo_data:

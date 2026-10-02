@@ -12,350 +12,262 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 * Interfaz de línea de comandos (CLI).
 * Gestión de dependencias mediante entornos virtuales.
 * Arquitectura orientada a la mantenibilidad y código limpio.
-
-
-## Librerías para el procesamiento de PDFs
-* **Si el PDF tiene texto seleccionable**
-    *  pypdf  -->  Permite unir, dividir y rotar pags., y gestionar metadatos.
-
-
-## Requisitos del Proyecto (12 Factor App - sugeridos en clase)
-* **Codebase** Se debe contar con una única base de código, versionada en un repositorio.
-* **Dependencias** Todas las dependencias deben declararse explícitamente (mediante pyproject.toml, etc).
-Se intenta evitar errores cuando muchas personas trabajan en el proyecto.
-* **Variables de Entorno** Utilizadas para configurar aspectos sensibles o particulares del entorno de ejecución.
-* **Configuraciones** Las configuraciones del sistema deben mantenerse separadas del código, de esta manera, el 
-código puede ejecutarse en distintos entornos sin modificaciones.
-* **Backing Services** Servicios externos como bases de datos, colas de mensajes, storage, etc, deben tratarse
-como recursos intercambiables.
-* **Construir, Desplegar, Ejecutar** preparar el proyecto, combinar build + configuracion, ejecutar.
-* **Procesos** Ejecutar como uno o mas procesos sin estados persistentes en memoria interna.
-* **Asignación de Puertos** La aplicación debe exponer servicios a través de puertos definidos.
-
-## Codigo limpio
-* **DRY - Don't Repeat Yoursefl** Evitar duplicación de codigo y lógica innecesaria.
-* **KISS - Keep It Simple, Stupid** Mantener el código simple y claro, sin complejidades innecesarias.  
-* **YAGANI - You Aren't Gonna Need It** Programar únicamente lo que es necesario.
-* **SOLID -** Busca que el código sea como un juego de LEGO: piezas independientes que encajan perfectamente y que puedas cambiar sin tener que romper toda la estructura. Explicamos su siglas a continuación...
-* **-S (Responsabilidad única)** Una clase debe hacer una sola cosa.
-* **-O (Abierto/Cerrado)** El código se debe poder ampliar, pero no mmodificar.
-* **-L(Sustitución de Liskov)** Una clase hija debe poder usarse en lugar de su padre sin romper nada.
-* **-I (Segregación de interfaces)** es mejor tener muchas interfaces pequeñas que una gigande con metodos que no se usan
-* **-D(Inversión de Dependencias)** No dependes de clases concretas, depende de abstracciones (interfaces).
-
-## GUÍA DE INSTALACIÓN
-
-Extractor de texto de archivos PDF con persistencia en MongoDB.
-
-![Status](https://img.shields.io/badge/status-active-brightgreen)
-![Python](https://img.shields.io/badge/python-3.12-blue)
-![FastAPI](https://img.shields.io/badge/fastapi-0.115.0-009688)
-![License](https://img.shields.io/badge/license-MIT-green)
-
-## Descripción
-
-Esta aplicación permite a los usuarios:
-
-- **Subir archivos PDF** — Los envía el cliente en formato binario
-- **Extraer texto automáticamente** — Lee el contenido directamente en memoria, sin guardar archivos temporales
-- **Persistir en MongoDB** — Guarda el documento con su checksum (SHA-256) para detectar duplicados
-- **Gestionar documentos** — CRUD completo: obtener, listar, actualizar y eliminar documentos
-
-Está construida siguiendo arquitectura empresarial en capas, TDD (Test-Driven Development), y principios YAGNI, DRY, KISS, SOLID, ya explicados anteoriormente.
+* **Arquitectura de Microservicios** para escalabilidad y trabajo en equipo.
 
 ---
 
-## Tecnologías
+## 🏗️ Arquitectura de Microservicios
 
-Herramienta | Uso |
-|---|---|
-| Python | Lenguaje principal |
-| Control de versiones | Git & GitHub |
-| Entorno de Desarrollo | Visual Studio Code |
-| FastAPI + Uvicorn | Framework web y servidor ASGI |
-| pypdf | Extracción de texto de PDFs |
-| Motor (async MongoDB) | Persistencia de documentos |
-| pytest + pytest-asyncio | Testing con cobertura |
-| uv | Gestión de dependencias |
-| Docker + Docker Compose | Orquestación de contenedores (app, MongoDB, proxy) |
-| Traefik | Reverse proxy / enrutamiento local |
-| mkcert | Certificados HTTPS para desarrollo local |
+El proyecto está dividido en **3 microservicios** independientes, cada uno en su propio subdirectorio:
 
----
-
-## Estructura del Proyecto 
 ```
 extracText/
-├── app/
-│   ├── api/                 #Routers de FastAPI (Capa de presentación)
-│   ├── application/         #Casos de Uso (orquestation)
-│   ├── domain/              #Entidades y excepciones (reglas de negocio)
-│   ├── infrastructure/      #MongoDB, servicios concretos
-├── config/                  #Configuracion de la app
-├── test/                    #Test automatizados
-├── certs/                   #Certificados HTTPS locales (mkcert)
-├── docker-compose.yml       #Orquestación de app + mongo + traefik
-├── dockerfile               #Imagen de la app
-├── .env.example             #Variables de entorno de ejemplo
-├── pyproject.toml           #Dependencias y configuración
+├── microservices/
+│   ├── api-gateway/          # Microservicio 1: API Gateway (FastAPI)
+│   │   ├── app/
+│   │   ├── config/
+│   │   ├── dockerfile
+│   │   ├── pyproject.toml
+│   │   └── uv.lock
+│   ├── extractor/            # Microservicio 2: PDF Extractor (FastAPI + pypdf)
+│   │   ├── app/
+│   │   ├── config/
+│   │   ├── dockerfile
+│   │   ├── pyproject.toml
+│   │   └── uv.lock
+│   └── storage/              # Microservicio 3: Document Storage (FastAPI + MongoDB)
+│       ├── app/
+│       ├── config/
+│       ├── dockerfile
+│       ├── pyproject.toml
+│       └── uv.lock
+├── docker-compose.yml        # Orquestación de microservicios
+├── dockerfile                # Dockerfile legacy (monolito)
+├── pyproject.toml            # Dependencias del monolito
 └── README.md
 ```
 
----
+### **1. API Gateway** (`microservices/api-gateway/`)
+- **Responsabilidad:** Recibir todas las requests HTTP y enrutarlas a los microservicios correspondientes.
+- **Tecnología:** FastAPI + httpx
+- **Función:** Punto de entrada único, manejo de autenticación, rate limiting.
+- **Integrante asignado:** Por definir
 
+### **2. PDF Extractor** (`microservices/extractor/`)
+- **Responsabilidad:** Extraer texto de los archivos PDF.
+- **Tecnología:** FastAPI + pypdf
+- **Función:** Recibir PDF, procesarlo, devolver texto plano y checksum SHA-256.
+- **Integrante asignado:** Por definir
 
-## Arquitectura
-
-El proyecto sigue una arquitectura en **4 capas bien separadas**:
-
-```
-┌─────────────────────────────────────────┐
-│  API (FastAPI Routers)                  │  ← Capa de presentación
-├─────────────────────────────────────────┤
-│  Application (Use Cases)                │  ← Orquestación de lógica
-├─────────────────────────────────────────┤
-│  Domain (Entidades, Excepciones)        │  ← Reglas de negocio puro
-├─────────────────────────────────────────┤
-│  Infrastructure (MongoDB, Services)     │  ← Implementaciones concretas
-└─────────────────────────────────────────┘
-```
-
-Cada capa tiene responsabilidades claras y se comunica a través de interfaces abstractas.
+### **3. Document Storage** (`microservices/storage/`)
+- **Responsabilidad:** Persistir documentos en MongoDB.
+- **Tecnología:** FastAPI + Motor (async MongoDB)
+- **Función:** CRUD de documentos, checksum SHA-256, detección de duplicados.
+- **Integrante asignado:** Por definir
 
 ---
 
-## Requisitos previos
+## 🔧 Herramientas de Testing de Carga
 
-Antes de instalar, nos aseguramos de tener:
+### **Vegeta**
+- Herramienta CLI escrita en Go para mandar muchos requests HTTP de manera simultánea.
+- Mide: latencia, RPS (requests por segundo), % de requests fallidas, errores.
+- Resultado en texto plano.
+
+### **K6**
+- Framework moderno de pruebas de carga con scripts en JavaScript.
+- Simula usuarios reales, mide tiempos de respuesta, datos procesados, % de fallos, usuarios simultáneos.
+- Genera gráficos.
+
+---
+
+## 🐳 Docker Compose
+
+### **Servicios orquestados:**
+
+| Servicio | Descripción | Réplicas |
+|---|---|---|
+| `traefik` | Reverse proxy / enrutamiento local | 1 |
+| `mongo` | Base de datos MongoDB | 1 |
+| `pdf-extractxt-api` | API Gateway (FastAPI) | 1 |
+| `pdf-extractxt-extractor` | PDF Extractor (FastAPI + pypdf) | 1 |
+| `pdf-extractxt-storage` | Document Storage (FastAPI + MongoDB) | 3 |
+
+### **Comandos útiles:**
+
+| Acción | Comando |
+|---|---|
+| Levantar todo | `docker compose up -d --build` |
+| Apagar todo | `docker compose down` |
+| Apagar y borrar datos de Mongo | `docker compose down -v` |
+| Ver contenedores corriendo | `docker compose ps` |
+| Ver logs de todo | `docker compose logs -f` |
+| Ver logs de un servicio | `docker compose logs -f pdf-extractxt-api` |
+| Reiniciar un servicio | `docker compose restart pdf-extractxt-api` |
+| Dashboard de Traefik | `http://localhost:8080` |
+
+---
+
+## 📋 Requisitos previos
 
 ### Software requerido:
-- **Python 3.12+** — [Descargar](https://www.python.org/downloads/)
 - **Docker Desktop** — [Descargar](https://www.docker.com/products/docker-desktop/)
 - **Git** — [Descargar](https://git-scm.com/)
 - **mkcert** — para generar certificados HTTPS locales
 
-> Con el enfoque actual (Docker Compose) **no hace falta instalar Python ni `uv` en tu máquina** — todo corre dentro de los contenedores. Si preferís desarrollar sin Docker, dejamos esa alternativa al final de esta guía.
-
-### Para verificar la instalación:
-
-```powershell
-python --version
-docker --version
-git --version
-```
-
-Deberías ver versiones similares a:
-```
-Python 3.12.13
-Docker version 27.0.0
-git version 2.45.0
-```
-
 ---
 
-## Instalación paso a paso
+## 🚀 Instalación paso a paso
 
-### **Clonar el repositorio**
+### **1. Clonar el repositorio**
 
 ```bash
 git clone https://github.com/TU_USUARIO/extracText.git
 cd extracText
 ```
 
-### **Instalar mkcert**
-Windows:
+### **2. Instalar mkcert**
 
-```bash
+Windows:
+```powershell
 winget install Filosottile.mkcert
 ```
-Verificar con:
 
-```bash
+Verificar:
+```powershell
 mkcert -version
 ```
 
-### **Generar el certificado HTTPS local**
+### **3. Generar el certificado HTTPS local**
 
 ```bash
 mkcert -install
 mkcert -cert-file certs/cert.pem -key-file certs/key.pem "extractext.localhost"
 ```
 
-### **Agregar el dominio local al archivo hosts**
-Abrir como **administrador** el Bloc de notas (clic derecho → "Ejecutar como administrador"), abrir:
+### **4. Agregar el dominio local al archivo hosts**
 
+Abrir como **administrador** el Bloc de notas, abrir:
 ```
 C:\Windows\System32\drivers\etc\hosts
 ```
 
-y agregar al final:
-
+Agregar al final:
 ```
 127.0.0.1    extractext.localhost
 ```
 
-Guardar el archivo.
-
-### **Configuramos variables de entorno**
+### **5. Configurar variables de entorno**
 
 ```bash
 cp .env.example .env
 ```
 
-El archivo `.env` contiene configuraciones como:
-```ini
-APP_NAME=extracText
-MONGODB_URL=mongodb://localhost:27017
-MONGODB_DB_NAME=extractext
-PDF_MAX_SIZE_MB=10
-```
+### **6. Levantar el proyecto completo**
 
-Si querés cambiar algo, editá el `.env` (opcional).
-
-### **Levantar el proyecto completo**
-
-Abrí Docker Desktop (buscalo en el menú Inicio, esperamos a que la ballena esté corriendo).
-
-Después en PowerShell/terminal:
+Abrir Docker Desktop, luego en PowerShell/terminal:
 
 ```bash
 docker compose up -d --build
 ```
 
-Esto levanta 3 contenedores conectados entre sí por una **red Docker compartida** (`extractext_net`):
+Esto levanta **5 contenedores** conectados entre sí por una **red Docker compartida** (`extractext_net`).
 
-| Servicio | Descripción |
-|---|---|
-| `mongo` | Base de datos Mongo DB |
-| `app` | API (FastAPI) del proyecto |
-| `traefik` | Proxy que enruta `extractext.localhost` hacia la app |
-
-### **Verificar que todo está corriendo**
+### **7. Verificar que todo está corriendo**
 
 ```bash
 docker compose ps
 ```
 
-Los 3 servicios deben figurar con estado `Up` (ninguno en `Restarting`)
+Todos los servicios deben figurar con estado `Up`.
 
-### **Acceder a la interfaz web**
-Abir el navegador en:
+### **8. Acceder a la interfaz web**
 
+Abrir el navegador en:
 ```
 http://extractext.localhost/docs
 ```
 
 Verás el **Swagger UI** — una interfaz interactiva para probar todos los endpoints.
 
-## Comandos útiles
-| Acción | Comando |
-|---|---|
-| Levantar todo | `docker compose up -d --build` |
-| Apagar todo | `docker compose down` |
-| Apagar y borrar también los datos de Mongo | `docker compose down -v` |
-| Ver contenedores corriendo | `docker compose logs -f app` |
-| Ver logs de todo | `docker compose logs -f` |
-| Ver logs de un servidor puntual | `docker compose restart -f app` |
-| Reiniciar un servidor puntual | `docker compose restart app` |
-| Deshboard de Traefik | `http://localhost:8080` |
+---
 
-## Actualizar el proyecto (traer cambios del equipo)
+## 📊 Diagrama de la Arquitectura
 
-No alcanza solo con `git pull`, porque puede haber cambios en `docker-compose.yml` o el `dockerfile` que requieren 
-reconstruir las imágenes:
-
-```bash
-git pull origin main
-docker compose down
-docker compose up -d --build
+```
+                    ┌─────────────────┐
+                    │   Traefik       │
+                    │  (Reverse Proxy)│
+                    └────────┬────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+    ┌─────────▼─────┐ ┌─────▼──────┐ ┌────▼────────┐
+    │ API Gateway   │ │ PDF        │ │ Document    │
+    │ (FastAPI)     │ │ Extractor  │ │ Storage     │
+    │               │ │ (pypdf)    │ │ (MongoDB)   │
+    └─────────┬─────┘ └─────┬──────┘ └────┬────────┘
+              │              │              │
+              └──────────────┼──────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │   MongoDB       │
+                    │   (Shared DB)   │
+                    └─────────────────┘
 ```
 
 ---
 
-## Conexión con el navegador 
-1. Confirmá que Traefik está corriendo: `docker compose ps`
-2. Probá el dashboard: `http://localhost:8080`
-3. Confirmá que el dominio resuelve: `ping extractext.localhost` (debe responder `127.0.0.1`)
-4. Si no resuelve, revisá que la línea esté en el archivo `hosts` (ver paso 4 más arriba)
+## 🧪 Testing de Carga
 
-**`{"detail":"Not Found"}` en `http://extractext.localhost`**
-No es un error: la app está funcionando. Simplemente no hay una ruta definida en `/`. Probá `http://extractext.localhost/docs`
+### **Vegeta**
+
+```bash
+# Instalar Vegeta
+go install github.com/tsenart/vegeta/v12@latest
+
+# Prueba de carga básica
+echo "GET http://extractext.localhost/api/v1/documents" | vegeta attack -duration=30s -rate=50 | vegeta report
+```
+
+### **K6**
+
+```bash
+# Instalar K6
+winget install k6
+
+# Crear script de prueba
+# k6 run load_test.js
+```
 
 ---
 
+## 📚 Librerías para el procesamiento de PDFs
 
-## Alternativa: correr la app sin Docker (desarrollo puntual)
-### **Instalar gestor de paquetes `uv`**
-
-`uv` es un gestor moderno y rápido de Python (alternativa a pip).
-
-**Windows (PowerShell):**
-```powershell
-powershell -ExecutionPolicy BypassCurrent -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-**macOS/Linux:**
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-Reinicia PowerShell/terminal y verifica:
-```bash
-uv --version
-```
-
-### **Instalar dependencias del proyecto**
-
-```bash
-uv sync --all-extras
-```
-Esto instala:
-- FastAPI y Uvicorn (servidor web)
-- MongoDB driver (Motor para async)
-- pypdf (extracción de texto)
-- pytest y pytest-asyncio (testing)
-- y más...
-
-El proceso tarda ~30 segundos la primera vez.
-
-
-Si ya lo corriste antes:
-```bash
-docker start mongo
-```
-
-Verificá que está corriendo:
-```bash
-docker ps
-```
-
-Deberías ver un contenedor llamado `mongo` con estado `Up`.
+* **Si el PDF tiene texto seleccionable**
+    *  pypdf  -->  Permite unir, dividir y rotar pags., y gestionar metadatos.
 
 ---
 
-## Ejecutamos la aplicación
+## 📋 Requisitos del Proyecto (12 Factor App)
 
-### Levantamos el servidor
+* **Codebase** Se debe contar con una única base de código, versionada en un repositorio.
+* **Dependencias** Todas las dependencias deben declararse explícitamente (mediante pyproject.toml, etc).
+* **Variables de Entorno** Utilizadas para configurar aspectos sensibles o particulares del entorno de ejecución.
+* **Configuraciones** Las configuraciones del sistema deben mantenerse separadas del código.
+* **Backing Services** Servicios externos como bases de datos, colas de mensajes, storage, etc, deben tratarse como recursos intercambiables.
+* **Construir, Desplegar, Ejecutar** preparar el proyecto, combinar build + configuracion, ejecutar.
+* **Procesos** Ejecutar como uno o mas procesos sin estados persistentes en memoria interna.
+* **Asignación de Puertos** La aplicación debe exponer servicios a través de puertos definidos.
 
-```bash
-uv run uvicorn app.main:app --reload
-```
+---
 
-Deberías ver algo como:
-```
-INFO:     Uvicorn running on http://127.0.0.1:8000
-INFO:     Application startup complete
-```
+## 🧹 Código limpio
 
-**¡La app está corriendo!**
-
-### Acceder a la interfaz web
-
-Abrí tu navegador en:
-
-```
-http://127.0.0.1:8000/docs
-```
+* **DRY - Don't Repeat Yourself** Evitar duplicación de codigo y lógica innecesaria.
+* **KISS - Keep It Simple, Stupid** Mantener el código simple y claro, sin complejidades innecesarias.  
+* **YAGANI - You Aren't Gonna Need It** Programar únicamente lo que es necesario.
+* **SOLID -** Busca que el código sea como un juego de LEGO: piezas independientes que encajan perfectamente y que puedas cambiar sin tener que romper toda la estructura.
 
 ---
 
