@@ -218,7 +218,13 @@ Verás el **Swagger UI** — una interfaz interactiva para probar todos los endp
 
 ---
 
-## 🧪 Testing de Carga
+## 🧪 Testing de Cargar
+
+### **INSTALACION DE GO**
+``` CMD
+winget install GoLang.Go
+
+```
 
 ### **Vegeta**
 
