@@ -41,7 +41,6 @@ services:
     environment:
       EXTRACTOR_URL: http://pdf-extractxt-extractor:8000
       STORAGE_URL: http://pdf-extractxt-storage:8000
-      UV_CACHE_DIR: /tmp/uv-cache
     depends_on:
       - pdf-extractxt-extractor
       - pdf-extractxt-storage

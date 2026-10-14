@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from app.domain.document import Document
@@ -29,7 +29,7 @@ class UpdateDocumentRequest(BaseModel):
     content: str
 
 
-def get_repository(request) -> AbstractDocumentRepository:
+def get_repository(request: Request) -> AbstractDocumentRepository:
     """Dependencia para obtener el repositorio de documentos."""
     return MongoDocumentRepository(request.app.state.db)
 

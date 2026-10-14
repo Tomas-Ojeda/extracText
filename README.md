@@ -232,7 +232,7 @@ winget install GoLang.Go
 # Instalar Vegeta
 go install github.com/tsenart/vegeta/v12@latest
 
-# Prueba de carga básica
+# Prueba de carga básica. En Git Bash
 echo "GET http://extractext.localhost/api/v1/documents" | vegeta attack -duration=30s -rate=50 | vegeta report
 ```
 
