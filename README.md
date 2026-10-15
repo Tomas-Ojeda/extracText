@@ -267,7 +267,7 @@ echo "GET http://extractext.localhost/api/v1/documents/?limit=20&offset=0" | veg
 winget install k6
 
 # Crear script de prueba
-# k6 run load_test.js
+# k6 run spike_tests.js
 ```
 
 ---
