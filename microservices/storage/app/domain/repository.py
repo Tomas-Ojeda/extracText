@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from app.domain.document import Document
+from app.domain.document import Document, DocumentSummary
 
 
 class AbstractDocumentRepository(ABC):
@@ -19,8 +19,8 @@ class AbstractDocumentRepository(ABC):
         """Retorna un documento por su checksum, o None si no existe."""
 
     @abstractmethod
-    async def find_all(self) -> list[Document]:
-        """Retorna todos los documentos persistidos."""
+    async def find_summaries(self, limit: int, offset: int) -> list[DocumentSummary]:
+        """Retorna resumenes de documentos persistidos (sin contenido)."""
 
     @abstractmethod
     async def update(self, document: Document) -> Document:

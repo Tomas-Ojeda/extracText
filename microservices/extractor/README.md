@@ -7,8 +7,7 @@ Microservicio encargado de **extraer texto desde archivos PDF** y calcular su ch
 - Recibir archivos PDF en bytes
 - Validar que el archivo sea un PDF válido
 - Extraer texto plano usando pypdf
-- Calcular checksum SHA-256 para detección de duplicados
-- Devolver texto y checksum al API Gateway
+- Devolver el texto extraído a Ingestion
 
 ## Tecnologías
 
@@ -42,6 +41,7 @@ extractor/
 
 | Método | Ruta | Descripción |
 |---|---|---|
+| GET | `/api/v1/health` | Health check |
 | POST | `/api/v1/extract` | Extraer texto de un PDF |
 
 ### Request
@@ -55,8 +55,7 @@ curl -X POST http://localhost:8000/api/v1/extract \
 
 ```json
 {
-  "content": "Texto extraído del PDF...",
-  "checksum": "a1b2c3d4e5f6..."
+  "content": "Texto extraído del PDF..."
 }
 ```
 
@@ -68,6 +67,7 @@ curl -X POST http://localhost:8000/api/v1/extract \
 | `APP_VERSION` | Versión | `0.1.0` |
 | `APP_DEBUG` | Modo debug | `false` |
 | `PDF_MAX_SIZE_MB` | Tamaño máximo de PDF en MB | `10` |
+| `WEB_CONCURRENCY` | Procesos uvicorn por contenedor | `2` |
 
 ## Desarrollo Local
 

@@ -97,6 +97,7 @@ extracText/
 | `mongo` | Base de datos MongoDB | 1 |
 | `pdf-extractxt-api` | API Gateway (FastAPI) | 1 |
 | `pdf-extractxt-extractor` | PDF Extractor (FastAPI + pypdf) | 1 |
+| `pdf-extractxt-ingestion` | Ingestion (orquestación de subida) | 1 |
 | `pdf-extractxt-storage` | Document Storage (FastAPI + MongoDB) | 3 |
 
 ### **Comandos útiles:**
@@ -111,6 +112,23 @@ extracText/
 | Ver logs de un servicio | `docker compose logs -f pdf-extractxt-api` |
 | Reiniciar un servicio | `docker compose restart pdf-extractxt-api` |
 | Dashboard de Traefik | `http://localhost:8080` |
+
+### **Variables de entorno configurables**
+
+Todas las variables se documentan en `.env.example`. Las principales:
+
+| Variable | Servicio | Descripción | Default |
+|---|---|---|---|
+| `WEB_CONCURRENCY` | todos | Procesos uvicorn por contenedor | `2` |
+| `INGESTION_URL` | api-gateway | URL de Ingestion | `http://pdf-extractxt-ingestion:8000` |
+| `STORAGE_URL` | api-gateway / ingestion | URL de Storage | `http://pdf-extractxt-storage:8000` |
+| `EXTRACTOR_URL` | ingestion | URL del Extractor | `http://pdf-extractxt-extractor:8000` |
+| `STORAGE_TIMEOUT_SECONDS` | api-gateway / ingestion | Timeout hacia Storage | `10` |
+| `INGESTION_TIMEOUT_SECONDS` | api-gateway | Timeout hacia Ingestion | `45` |
+| `EXTRACTOR_TIMEOUT_SECONDS` | ingestion | Timeout hacia Extractor | `30` |
+| `PDF_MAX_SIZE_MB` | api-gateway / extractor | Tamaño máximo de PDF | `10` |
+| `LIST_DEFAULT_LIMIT` | storage | `limit` por defecto del listado | `50` |
+| `LIST_MAX_LIMIT` | storage | `limit` máximo del listado | `100` |
 
 ---
 
@@ -177,7 +195,7 @@ Abrir Docker Desktop, luego en PowerShell/terminal:
 docker compose up -d --build
 ```
 
-Esto levanta **5 contenedores** conectados entre sí por una **red Docker compartida** (`extractext_net`).
+Esto levanta **6 contenedores** conectados entre sí por una **red Docker compartida** (`extractext_net`).
 
 ### **7. Verificar que todo está corriendo**
 
@@ -238,8 +256,8 @@ winget install GoLang.Go
 # Instalar Vegeta
 go install github.com/tsenart/vegeta/v12@latest
 
-# Prueba de carga básica. En Git Bash
-echo "GET http://extractext.localhost/api/v1/documents" | vegeta attack -duration=30s -rate=50 | vegeta report
+# Prueba de carga básica. En Git Bash (usar barra final para evitar el 307 de FastAPI)
+echo "GET http://extractext.localhost/api/v1/documents/?limit=20&offset=0" | vegeta attack -duration=30s -rate=50 | vegeta report
 ```
 
 ### **K6**

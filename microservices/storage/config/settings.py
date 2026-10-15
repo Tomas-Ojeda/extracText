@@ -17,5 +17,9 @@ class Settings(BaseSettings):
     mongodb_url: str = "mongodb://mongo:27017"
     mongodb_db_name: str = "extractext"
 
+    # Paginacion del listado (factor III)
+    list_default_limit: int = 50
+    list_max_limit: int = 100
+
 
 settings = Settings()

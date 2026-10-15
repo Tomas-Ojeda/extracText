@@ -41,6 +41,10 @@ services:
     environment:
       INGESTION_URL: http://pdf-extractxt-ingestion:8000
       STORAGE_URL: http://pdf-extractxt-storage:8000
+      PDF_MAX_SIZE_MB: 10
+      STORAGE_TIMEOUT_SECONDS: 10
+      INGESTION_TIMEOUT_SECONDS: 45
+      WEB_CONCURRENCY: "2"
     depends_on:
       - pdf-extractxt-ingestion
       - pdf-extractxt-storage
@@ -63,7 +67,7 @@ services:
     restart: unless-stopped
     environment:
       PDF_MAX_SIZE_MB: 10
-      UV_CACHE_DIR: /tmp/uv-cache
+      WEB_CONCURRENCY: "2"
     networks:
       - extractext_net
 
@@ -79,6 +83,9 @@ services:
     environment:
       EXTRACTOR_URL: http://pdf-extractxt-extractor:8000
       STORAGE_URL: http://pdf-extractxt-storage:8000
+      STORAGE_TIMEOUT_SECONDS: 10
+      EXTRACTOR_TIMEOUT_SECONDS: 30
+      WEB_CONCURRENCY: "2"
     depends_on:
       - pdf-extractxt-extractor
       - pdf-extractxt-storage
@@ -94,7 +101,9 @@ services:
     environment:
       MONGODB_URL: mongodb://extractext_mongo:27017
       MONGODB_DB_NAME: extractext
-      UV_CACHE_DIR: /tmp/uv-cache
+      LIST_DEFAULT_LIMIT: 50
+      LIST_MAX_LIMIT: 100
+      WEB_CONCURRENCY: "2"
     depends_on:
       - mongo
     networks:

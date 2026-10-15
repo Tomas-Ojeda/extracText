@@ -47,8 +47,8 @@ export default function () {
 
     const params = { 
         timeout: '90s',
-        // Evita falsos fallos en la metrica http_req_failed cuando la API devuelve 409
-        expectedStatuses: [201, 409],
+        // Un duplicado devuelve 200 por diseno; un alta nueva, 201
+        expectedStatuses: [200, 201],
     };
 
     const res = http.post(`${BASE_URL}/api/v1/documents/`, payload, params);
@@ -56,7 +56,7 @@ export default function () {
     statusTrend.add(res.status);
 
     check(res, {
-        'status es 201 o 409 (esperado)': (r) => r.status === 201 || r.status === 409,
+        'status es 200 o 201 (esperado)': (r) => r.status === 200 || r.status === 201,
         'no es error 500': (r) => r.status !== 500,
     });
 }

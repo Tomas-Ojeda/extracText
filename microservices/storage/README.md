@@ -49,7 +49,7 @@ storage/
 |---|---|---|
 | GET | `/api/v1/health` | Health check |
 | POST | `/api/v1/documents/` | Crear documento |
-| GET | `/api/v1/documents/` | Listar todos los documentos |
+| GET | `/api/v1/documents/?limit=&offset=` | Listar resumenes paginados sin `content` |
 | GET | `/api/v1/documents/{id}` | Obtener documento por ID |
 | PUT | `/api/v1/documents/{id}` | Actualizar contenido de documento |
 | DELETE | `/api/v1/documents/{id}` | Eliminar documento |
@@ -86,6 +86,9 @@ curl -X POST http://localhost:8000/api/v1/documents/ \
 | `APP_DEBUG` | Modo debug | `false` |
 | `MONGODB_URL` | URL de conexión a MongoDB | `mongodb://mongo:27017` |
 | `MONGODB_DB_NAME` | Nombre de la base de datos | `extractext` |
+| `LIST_DEFAULT_LIMIT` | `limit` por defecto del listado | `50` |
+| `LIST_MAX_LIMIT` | `limit` máximo permitido en el listado | `100` |
+| `WEB_CONCURRENCY` | Procesos uvicorn por contenedor | `2` |
 
 ## Desarrollo Local
 

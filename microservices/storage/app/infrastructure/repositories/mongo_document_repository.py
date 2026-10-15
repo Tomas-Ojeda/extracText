@@ -4,7 +4,7 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.errors import DuplicateKeyError
 
-from app.domain.document import Document
+from app.domain.document import Document, DocumentSummary
 from app.domain.exceptions import DuplicateDocumentError
 from app.domain.repository import AbstractDocumentRepository
 
@@ -22,7 +22,9 @@ class MongoDocumentRepository(AbstractDocumentRepository):
         try:
             result = await self._collection.insert_one(doc)
         except DuplicateKeyError as exc:
-            raise DuplicateDocumentError("El documento ya existe (checksum duplicado)") from exc
+            raise DuplicateDocumentError(
+                "El documento ya existe (checksum duplicado)"
+            ) from exc
         document.id = str(result.inserted_id)
         return document
 
@@ -36,9 +38,14 @@ class MongoDocumentRepository(AbstractDocumentRepository):
         raw = await self._collection.find_one({"checksum": checksum})
         return _to_entity(raw) if raw else None
 
-    async def find_all(self) -> list[Document]:
-        cursor = self._collection.find()
-        return [_to_entity(raw) async for raw in cursor]
+    async def find_summaries(self, limit: int, offset: int) -> list[DocumentSummary]:
+        cursor = (
+            self._collection.find({}, {"content": 0})
+            .sort("_id", -1)
+            .skip(offset)
+            .limit(limit)
+        )
+        return [_to_summary(raw) async for raw in cursor]
 
     async def update(self, document: Document) -> Document:
         document.updated_at = datetime.now(UTC)
@@ -63,6 +70,16 @@ def _to_mongo(doc: Document) -> dict:
         "created_at": doc.created_at,
         "updated_at": doc.updated_at,
     }
+
+
+def _to_summary(raw: dict) -> DocumentSummary:
+    return DocumentSummary(
+        id=str(raw["_id"]),
+        filename=raw["filename"],
+        checksum=raw["checksum"],
+        created_at=raw["created_at"],
+        updated_at=raw["updated_at"],
+    )
 
 
 def _to_entity(raw: dict) -> Document:

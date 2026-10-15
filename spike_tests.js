@@ -10,6 +10,11 @@ export const options = {
         { duration: '20s', target: 50 },
         { duration: '10s', target: 0 },
     ],
+    thresholds: {
+        http_req_failed: ['rate<0.01'],
+        checks: ['rate>0.99'],
+        http_req_duration: ['p(95)<3500'],
+    },
 };
 
 // URL correcta usando el proxy de Traefik
@@ -45,8 +50,8 @@ export default function () {
 
     const params = {
         responseType: 'text',
-        // Reconoce 201 y 409 como validos en la metrica global http_req_failed
-        expectedStatuses: [201, 409],
+        // Reconoce 200 (duplicado) y 201 (alta nueva) como validos en http_req_failed
+        expectedStatuses: [200, 201],
     };
 
     const res = http.post(`${BASE_URL}/api/v1/documents/`, payload, params);
@@ -54,7 +59,7 @@ export default function () {
     statusTrend.add(res.status);
 
     check(res, {
-        'status es 201 o 409': (r) => r.status === 201 || r.status === 409,
+        'status es 200 o 201': (r) => r.status === 200 || r.status === 201,
         'no es error 500': (r) => r.status !== 500,
     });
 }

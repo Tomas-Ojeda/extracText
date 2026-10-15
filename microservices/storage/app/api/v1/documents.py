@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
 
 from app.domain.document import Document
 from app.domain.exceptions import DuplicateDocumentError
 from app.domain.repository import AbstractDocumentRepository
 from app.infrastructure.repositories.mongo_document_repository import MongoDocumentRepository
+from config.settings import settings
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -13,6 +14,12 @@ class DocumentResponse(BaseModel):
     id: str
     filename: str
     content: str
+    checksum: str
+
+
+class DocumentSummaryResponse(BaseModel):
+    id: str
+    filename: str
     checksum: str
 
 
@@ -78,15 +85,17 @@ async def get_document_by_checksum(
     )
 
 
-@router.get("/", response_model=list[DocumentResponse])
+@router.get("/", response_model=list[DocumentSummaryResponse])
 async def list_documents(
+    limit: int = Query(default=settings.list_default_limit, ge=1, le=settings.list_max_limit),
+    offset: int = Query(default=0, ge=0),
     repository: AbstractDocumentRepository = Depends(get_repository),
 ):
-    """Lista todos los documentos."""
-    documents = await repository.find_all()
+    """Lista resumenes paginados de documentos."""
+    summaries = await repository.find_summaries(limit=limit, offset=offset)
     return [
-        DocumentResponse(id=d.id, filename=d.filename, content=d.content, checksum=d.checksum)
-        for d in documents
+        DocumentSummaryResponse(id=s.id, filename=s.filename, checksum=s.checksum)
+        for s in summaries
     ]
 
 
