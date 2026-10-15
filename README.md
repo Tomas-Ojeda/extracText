@@ -18,7 +18,7 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 
 ## 🏗️ Arquitectura de Microservicios
 
-El proyecto está dividido en **3 microservicios** independientes, cada uno en su propio subdirectorio:
+El proyecto está dividido en **4 microservicios** independientes, cada uno en su propio subdirectorio:
 
 ```
 extracText/
@@ -35,7 +35,13 @@ extracText/
 │   │   ├── dockerfile
 │   │   ├── pyproject.toml
 │   │   └── uv.lock
-│   └── storage/              # Microservicio 3: Document Storage (FastAPI + MongoDB)
+│   ├── ingestion/            # Microservicio 3: Ingestion (orquestacion de subida)
+│   │   ├── app/
+│   │   ├── config/
+│   │   ├── dockerfile
+│   │   ├── pyproject.toml
+│   │   └── uv.lock
+│   └── storage/              # Microservicio 4: Document Storage (FastAPI + MongoDB)
 │       ├── app/
 │       ├── config/
 │       ├── dockerfile

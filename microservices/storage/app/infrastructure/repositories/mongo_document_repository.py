@@ -2,8 +2,10 @@ from datetime import datetime, UTC
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo.errors import DuplicateKeyError
 
 from app.domain.document import Document
+from app.domain.exceptions import DuplicateDocumentError
 from app.domain.repository import AbstractDocumentRepository
 
 
@@ -17,7 +19,10 @@ class MongoDocumentRepository(AbstractDocumentRepository):
 
     async def save(self, document: Document) -> Document:
         doc = _to_mongo(document)
-        result = await self._collection.insert_one(doc)
+        try:
+            result = await self._collection.insert_one(doc)
+        except DuplicateKeyError as exc:
+            raise DuplicateDocumentError("El documento ya existe (checksum duplicado)") from exc
         document.id = str(result.inserted_id)
         return document
 

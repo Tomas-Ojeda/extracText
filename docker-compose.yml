@@ -39,10 +39,10 @@ services:
     image: extractext/api-gateway:latest
     restart: unless-stopped
     environment:
-      EXTRACTOR_URL: http://pdf-extractxt-extractor:8000
+      INGESTION_URL: http://pdf-extractxt-ingestion:8000
       STORAGE_URL: http://pdf-extractxt-storage:8000
     depends_on:
-      - pdf-extractxt-extractor
+      - pdf-extractxt-ingestion
       - pdf-extractxt-storage
     networks:
       - extractext_net
@@ -70,6 +70,21 @@ services:
   # ─────────────────────────────────────────────────────────
   # Microservicio: Document Storage (FastAPI + MongoDB) - Interno
   # ─────────────────────────────────────────────────────────
+  pdf-extractxt-ingestion:
+    build:
+      context: ./microservices/ingestion
+      dockerfile: dockerfile
+    image: extractext/ingestion:latest
+    restart: unless-stopped
+    environment:
+      EXTRACTOR_URL: http://pdf-extractxt-extractor:8000
+      STORAGE_URL: http://pdf-extractxt-storage:8000
+    depends_on:
+      - pdf-extractxt-extractor
+      - pdf-extractxt-storage
+    networks:
+      - extractext_net
+
   pdf-extractxt-storage:
     build:
       context: ./microservices/storage

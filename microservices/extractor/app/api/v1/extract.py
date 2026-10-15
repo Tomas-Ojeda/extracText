@@ -2,14 +2,12 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, status
 from pydantic import BaseModel
 
 from app.services.pdf_extractor import validate_and_extract_text
-from app.services.checksum_service import compute_checksum
 
 router = APIRouter(tags=["extract"])
 
 
 class ExtractResponse(BaseModel):
     content: str
-    checksum: str
 
 
 @router.post("/extract", response_model=ExtractResponse)
@@ -26,6 +24,4 @@ async def extract_text(file: UploadFile = File(...)):
             detail=str(e),
         )
 
-    checksum = compute_checksum(file_bytes)
-
-    return ExtractResponse(content=text, checksum=checksum)
+    return ExtractResponse(content=text)

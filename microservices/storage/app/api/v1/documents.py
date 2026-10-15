@@ -2,10 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from app.domain.document import Document
-from app.domain.exceptions import (
-    DocumentNotFoundError,
-    DuplicateDocumentError,
-)
+from app.domain.exceptions import DuplicateDocumentError
 from app.domain.repository import AbstractDocumentRepository
 from app.infrastructure.repositories.mongo_document_repository import MongoDocumentRepository
 
@@ -40,25 +37,44 @@ async def create_document(
     repository: AbstractDocumentRepository = Depends(get_repository),
 ):
     """Crea un documento en la base de datos."""
-    existing = await repository.find_by_checksum(body.checksum)
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="El documento ya existe (checksum duplicado)",
-        )
-
     document = Document(
         filename=body.filename,
         content=body.content,
         checksum=body.checksum,
     )
-    saved = await repository.save(document)
+    try:
+        saved = await repository.save(document)
+    except DuplicateDocumentError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El documento ya existe (checksum duplicado)",
+        ) from exc
 
     return DocumentResponse(
         id=saved.id,
         filename=saved.filename,
         content=saved.content,
         checksum=saved.checksum,
+    )
+
+
+@router.get("/by-checksum/{checksum}", response_model=DocumentResponse)
+async def get_document_by_checksum(
+    checksum: str,
+    repository: AbstractDocumentRepository = Depends(get_repository),
+):
+    """Obtiene un documento por su checksum, o 404 si no existe."""
+    document = await repository.find_by_checksum(checksum)
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Documento no encontrado",
+        )
+    return DocumentResponse(
+        id=document.id,
+        filename=document.filename,
+        content=document.content,
+        checksum=document.checksum,
     )
 
 
