@@ -1,4 +1,3 @@
-from datetime import datetime, UTC
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -35,7 +34,6 @@ class MongoDocumentRepository(AbstractDocumentRepository):
         return [_to_entity(raw) async for raw in cursor]
 
     async def update(self, document: Document) -> Document:
-        document.updated_at = datetime.now(UTC)
         await self._collection.update_one(
             {"_id": ObjectId(document.id)},
             {"$set": {"content": document.content, "updated_at": document.updated_at}},

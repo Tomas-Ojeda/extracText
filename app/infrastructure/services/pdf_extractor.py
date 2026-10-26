@@ -30,3 +30,9 @@ def validate_and_extract_text(file_bytes: bytes, filename: str) -> str:
     ).strip()
 
     return text
+
+class PdfTextExtractor:
+    """Adaptador concreto del puerto TextExtractor usando pypdf."""
+
+    def extract(self, data: bytes, filename: str) -> str:
+        return validate_and_extract_text(data, filename)

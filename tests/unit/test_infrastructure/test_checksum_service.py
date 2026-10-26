@@ -5,7 +5,7 @@ def test_checksum_is_sha256():
     data = b"hello world"
     result = compute_checksum(data)
     assert len(result) == 64  # SHA-256 produce 64 hex chars
-    assert result == "b94d27b9934d3e08a52e52d7da7dabfac484efe04294e576db32ec3b3c2d0af9"
+    assert result == "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
 
 
 def test_same_data_same_checksum():

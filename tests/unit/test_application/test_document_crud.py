@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import AsyncMock
 from app.application.use_cases.get_document import GetDocumentUseCase
 from app.application.use_cases.delete_document import DeleteDocumentUseCase
+from app.application.use_cases.update_document import UpdateDocumentUseCase
 from app.domain.document import Document
 from app.domain.exceptions import DocumentNotFoundError
 
@@ -33,3 +34,27 @@ async def test_delete_document_not_found():
     repo.delete.return_value = False
     with pytest.raises(DocumentNotFoundError):
         await DeleteDocumentUseCase(repo).execute("id-inexistente")
+
+
+@pytest.mark.asyncio
+async def test_update_document_happy_path():
+    repo = AsyncMock()
+    repo.find_by_id.return_value = Document(filename="test.pdf", content="viejo", checksum="chk")
+    updated = Document(filename="test.pdf", content="nuevo contenido", checksum="chk")
+    repo.update.return_value = updated
+
+    use_case = UpdateDocumentUseCase(repo)
+    result = await use_case.execute("abc123", "nuevo contenido")
+
+    assert result.content == "nuevo contenido"
+    assert repo.update.called
+
+
+@pytest.mark.asyncio
+async def test_update_document_not_found():
+    repo = AsyncMock()
+    repo.find_by_id.return_value = None
+
+    use_case = UpdateDocumentUseCase(repo)
+    with pytest.raises(DocumentNotFoundError):
+        await use_case.execute("id-inexistente", "contenido")

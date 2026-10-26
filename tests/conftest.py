@@ -2,6 +2,9 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from mongomock_motor import AsyncMongoMockClient
 
+from app.infrastructure.repositories.mongo_document_repository import MongoDocumentRepository
+from app.infrastructure.services.checksum_service import Sha256ChecksumCalculator
+from app.infrastructure.services.pdf_extractor import PdfTextExtractor
 from app.main import create_app
 
 
@@ -19,9 +22,12 @@ async def mock_db():
 
 @pytest.fixture
 async def app(mock_db):
-    """Aplicación FastAPI con DB mockeada."""
+    """Aplicación FastAPI con DB mockeada y dependencias cableadas."""
     application = create_app()
     application.state.db = mock_db
+    application.state.repository = MongoDocumentRepository(mock_db)
+    application.state.text_extractor = PdfTextExtractor()
+    application.state.checksum_calculator = Sha256ChecksumCalculator()
     return application
 
 

@@ -18,3 +18,10 @@ def test_rejects_oversized_file(monkeypatch):
 def test_rejects_invalid_pdf_bytes():
     with pytest.raises(InvalidPDFError, match="válido"):
         validate_and_extract_text(b"esto no es un pdf", "archivo.pdf")
+
+
+def test_extracts_text_from_real_pdf():
+    with open("pdfs_variants/2020-Scrum-Guide-Spanish-Latin-South-American_v1.pdf", "rb") as f:
+        text = validate_and_extract_text(f.read(), "scrum.pdf")
+    assert isinstance(text, str)
+    assert len(text) > 0
