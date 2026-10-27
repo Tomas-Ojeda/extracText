@@ -30,6 +30,18 @@ services:
       - extractext_net
 
   # ─────────────────────────────────────────────────────────
+  # Consul - Service Discovery
+  # ─────────────────────────────────────────────────────────
+  consul:
+    image: hashicorp/consul:latest
+    container_name: extractext_consul
+    ports:
+      - "8500:8500"
+    command: agent -dev -ui -client=0.0.0.0
+    networks:
+      - extractext_net
+
+  # ─────────────────────────────────────────────────────────
   # Microservicio: API Gateway (FastAPI) - Punto de entrada
   # ─────────────────────────────────────────────────────────
   pdf-extractxt-api:
@@ -48,6 +60,7 @@ services:
     depends_on:
       - pdf-extractxt-ingestion
       - pdf-extractxt-storage
+      - consul
     networks:
       - extractext_net
     labels:
@@ -68,11 +81,13 @@ services:
     environment:
       PDF_MAX_SIZE_MB: 10
       WEB_CONCURRENCY: "2"
+    depends_on:
+      - consul
     networks:
       - extractext_net
 
   # ─────────────────────────────────────────────────────────
-  # Microservicio: Document Storage (FastAPI + MongoDB) - Interno
+  # Microservicio: Ingestion (FastAPI) - Orquestador síncrono
   # ─────────────────────────────────────────────────────────
   pdf-extractxt-ingestion:
     build:
@@ -89,9 +104,13 @@ services:
     depends_on:
       - pdf-extractxt-extractor
       - pdf-extractxt-storage
+      - consul
     networks:
       - extractext_net
 
+  # ─────────────────────────────────────────────────────────
+  # Microservicio: Document Storage (FastAPI + MongoDB)
+  # ─────────────────────────────────────────────────────────
   pdf-extractxt-storage:
     build:
       context: ./microservices/storage
