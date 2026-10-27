@@ -15,3 +15,15 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+import signal
+
+
+def _handle_shutdown(signum, frame):
+    import sys
+    sys.exit(0)
+
+
+signal.signal(signal.SIGTERM, _handle_shutdown)
+signal.signal(signal.SIGINT, _handle_shutdown)

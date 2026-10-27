@@ -1,8 +1,8 @@
+import signal
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo.errors import DuplicateKeyError
 
 from app.api.router import api_router
 from app.infrastructure.repositories.mongo_document_repository import MongoDocumentRepository
@@ -21,8 +21,10 @@ async def lifespan(app: FastAPI):
             "No se pudo crear el índice único sobre 'checksum' en la colección 'documents'. "
             "Verifica que no haya checksums duplicados."
         ) from exc
-    yield
-    client.close()
+    try:
+        yield
+    finally:
+        client.close()
 
 
 def create_app() -> FastAPI:
@@ -37,3 +39,12 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+def _handle_shutdown(signum, frame):
+    import sys
+    sys.exit(0)
+
+
+signal.signal(signal.SIGTERM, _handle_shutdown)
+signal.signal(signal.SIGINT, _handle_shutdown)
