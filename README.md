@@ -16,60 +16,131 @@ Proyecto desarrollado para la asignatura **Desarrollo de Software** (3er Año - 
 
 ---
 
-## 🏗️ Arquitectura de Microservicios
+## Dos versiones del sistema
 
-El proyecto está dividido en **4 microservicios** independientes, cada uno en su propio subdirectorio:
+El proyecto tiene dos implementaciones de la misma funcionalidad:
+
+| Versión | Dónde vive | Cómo se ejecuta |
+| --- | --- | --- |
+| **Monolito** | Este repositorio (`app/`) | Con `uv` (ver "Ejecutar el monolito") |
+| **Microservicios** | 4 repositorios independientes, orquestados desde el `docker-compose.yml` de este repo | Con `docker compose up -d --build` |
+
+## Arquitectura de microservicios
+
+El sistema se divide en 4 servicios, cada uno con **su propio repositorio**:
+
+| Servicio | Repositorio | Responsabilidad |
+| --- | --- | --- |
+| API Gateway | [extractext-api-gateway](https://github.com/Tomas-Ojeda/extractext-api-gateway) | Único punto de entrada. Valida y reenvía las peticiones; no tiene lógica de negocio |
+| Ingestion | [extractext-ingestion](https://github.com/Tomas-Ojeda/extractext-ingestion) | Orquesta la subida: calcula el checksum, verifica duplicados y coordina al extractor y a storage |
+| Extractor | [extractext-extractor](https://github.com/Tomas-Ojeda/extractext-extractor) | Valida el PDF y extrae el texto (pypdf). No guarda nada |
+| Storage | [extractext-storage](https://github.com/Tomas-Ojeda/extractext-storage) | Único servicio que accede a MongoDB. CRUD de documentos e índice único sobre el checksum |
+
+### Flujo de una subida
+
+```
+Cliente → Traefik → API Gateway → Ingestion ─┬→ Storage  (¿ya existe el checksum?)
+                                             ├→ Extractor (extrae el texto)
+                                             └→ Storage  (guarda el documento) → MongoDB
+```
+
+- Si el PDF **ya existe**, ingestion devuelve el documento guardado (subida idempotente) y no vuelve a extraer.
+- Si dos usuarios suben el mismo PDF a la vez, el **índice único** de MongoDB deja pasar solo una inserción.
+- Los servicios se comunican por **HTTP**, y se encuentran por **URLs configuradas con variables de entorno** (`INGESTION_URL`, `EXTRACTOR_URL`, `STORAGE_URL`).
+
+### Cómo se conectan los repositorios con este proyecto
+
+Este repositorio no contiene el código de los microservicios. El `docker-compose.yml` le indica a Docker que **construya cada imagen directamente desde el repositorio de GitHub** del servicio:
+
+```yaml
+pdf-extractxt-storage:
+  build:
+    context: https://github.com/Tomas-Ojeda/extractext-storage.git#main
+    dockerfile: dockerfile
+```
+
+
+Esto cumple el Factor I (Codebase) de 12 Factor App: cada microservicio es una aplicación con su propia base de código, historial, tests y `dockerfile`. Este repositorio se encarga solo del monolito y de la **orquestación** (compose, Traefik, MongoDB y Consul).
+
+## Infraestructura (docker-compose)
+
+| Servicio | Descripción |
+| --- | --- |
+| `traefik` | Reverse proxy: enruta `extractext.localhost` hacia el API Gateway |
+| `mongo` | Base de datos MongoDB (con volumen persistente) |
+| `consul` | Descubrimiento de servicios (UI en el puerto 8500) |
+| `pdf-extractxt-api` | API Gateway |
+| `pdf-extractxt-ingestion` | Servicio de ingestion |
+| `pdf-extractxt-extractor` | Servicio de extracción de texto |
+| `pdf-extractxt-storage` | Servicio de persistencia (3 réplicas) |
+
+Todos los contenedores comparten la red Docker `extractext_net`.
+
+## Estructura del proyecto (monolito)
 
 ```
 extracText/
-├── microservices/
-│   ├── api-gateway/          # Microservicio 1: API Gateway (FastAPI)
-│   │   ├── app/
-│   │   ├── config/
-│   │   ├── dockerfile
-│   │   ├── pyproject.toml
-│   │   └── uv.lock
-│   ├── extractor/            # Microservicio 2: PDF Extractor (FastAPI + pypdf)
-│   │   ├── app/
-│   │   ├── config/
-│   │   ├── dockerfile
-│   │   ├── pyproject.toml
-│   │   └── uv.lock
-│   ├── ingestion/            # Microservicio 3: Ingestion (orquestacion de subida)
-│   │   ├── app/
-│   │   ├── config/
-│   │   ├── dockerfile
-│   │   ├── pyproject.toml
-│   │   └── uv.lock
-│   └── storage/              # Microservicio 4: Document Storage (FastAPI + MongoDB)
-│       ├── app/
-│       ├── config/
-│       ├── dockerfile
-│       ├── pyproject.toml
-│       └── uv.lock
-├── docker-compose.yml        # Orquestación de microservicios
-├── dockerfile                # Dockerfile legacy (monolito)
-├── pyproject.toml            # Dependencias del monolito
+├── app/
+│   ├── api/                 # Routers de FastAPI (capa de presentación)
+│   ├── application/         # Casos de uso (orquestación)
+│   ├── domain/              # Entidades y excepciones (reglas de negocio)
+│   └── infrastructure/      # MongoDB y servicios concretos
+├── config/                  # Configuración de la app
+├── tests/                   # Tests automatizados (unitarios e integración)
+├── docker-compose.yml       # Orquestación de microservicios + mongo + traefik + consul
+├── dockerfile               # Imagen del monolito
+├── .env.example             # Variables de entorno de ejemplo
+├── pyproject.toml           # Dependencias y configuración
 └── README.md
 ```
 
-### **1. API Gateway** (`microservices/api-gateway/`)
-- **Responsabilidad:** Recibir todas las requests HTTP y enrutarlas a los microservicios correspondientes.
-- **Tecnología:** FastAPI + httpx
-- **Función:** Punto de entrada único, manejo de autenticación, rate limiting.
-- **Integrante asignado:** Por definir
+### Arquitectura en capas
 
-### **2. PDF Extractor** (`microservices/extractor/`)
-- **Responsabilidad:** Extraer texto de los archivos PDF.
-- **Tecnología:** FastAPI + pypdf
-- **Función:** Recibir PDF, procesarlo, devolver texto plano y checksum SHA-256.
-- **Integrante asignado:** Por definir
+```
+┌─────────────────────────────────────────┐
+│  API (FastAPI Routers)                  │  ← Capa de presentación
+├─────────────────────────────────────────┤
+│  Application (Use Cases)                │  ← Orquestación de lógica
+├─────────────────────────────────────────┤
+│  Domain (Entidades, Excepciones)        │  ← Reglas de negocio puras
+├─────────────────────────────────────────┤
+│  Infrastructure (MongoDB, Services)     │  ← Implementaciones concretas
+└─────────────────────────────────────────┘
+```
 
-### **3. Document Storage** (`microservices/storage/`)
-- **Responsabilidad:** Persistir documentos en MongoDB.
-- **Tecnología:** FastAPI + Motor (async MongoDB)
-- **Función:** CRUD de documentos, checksum SHA-256, detección de duplicados.
-- **Integrante asignado:** Por definir
+
+## Librerías para el procesamiento de PDFs
+
+- **Si el PDF tiene texto seleccionable:** `pypdf`, para extraer el texto página por página.
+
+## 12 Factor App: cómo se aplica en el proyecto
+
+| # | Factor | Aplicación en extracText |
+| --- | --- | --- |
+| I | **Codebase** | Una base de código por aplicación: el monolito tiene su repositorio y cada microservicio el suyo |
+| II | **Dependencias** | Declaradas explícitamente en `pyproject.toml` y bloqueadas con `uv.lock` |
+| III | **Configuración** | Variables de entorno (`.env.example`, bloque `environment` del compose), separadas del código |
+| IV | **Backing services** | MongoDB se accede por `MONGODB_URL`, y cada servicio se trata como un recurso accesible por URL |
+| V | **Build, release, run** | Se construye la imagen (`dockerfile`), se combina con la configuración (compose) y se ejecuta |
+| VI | **Procesos** | Procesos sin estado: el PDF se procesa en memoria y la persistencia queda en MongoDB |
+| VII | **Port binding** | Cada servicio expone su propio puerto (8000) |
+| VIII | **Concurrencia** | Escala con procesos: `WEB_CONCURRENCY` y réplicas (`replicas: 3` en storage) |
+| IX | **Disposability** | Contenedores descartables, con `restart: unless-stopped` |
+| X | **Paridad dev/prod** | Mismas imágenes y mismo MongoDB en desarrollo y despliegue, con Docker |
+| XI | **Logs** | Los servicios escriben en stdout (`docker compose logs`) |
+| XII | **Admin processes** | Scripts puntuales `seed.py` y `migrate.py` en el servicio storage |
+
+## Código limpio
+
+- **DRY - Don't Repeat Yourself:** evitar duplicación de código y lógica innecesaria.
+- **KISS - Keep It Simple, Stupid:** mantener el código simple y claro, sin complejidades innecesarias.
+- **YAGNI - You Aren't Gonna Need It:** programar únicamente lo que es necesario.
+- **SOLID:** busca que el código sea como un juego de LEGO: piezas independientes que encajan y se pueden cambiar sin romper toda la estructura.
+  - **S (Responsabilidad única):** una clase debe hacer una sola cosa.
+  - **O (Abierto/Cerrado):** el código se puede ampliar, pero no modificar.
+  - **L (Sustitución de Liskov):** una clase hija debe poder usarse en lugar de su padre sin romper nada.
+  - **I (Segregación de interfaces):** es mejor tener muchas interfaces pequeñas que una gigante con métodos que no se usan.
+  - **D (Inversión de dependencias):** no se depende de clases concretas, sino de abstracciones (interfaces).
 
 ---
 
@@ -272,33 +343,5 @@ winget install k6
 
 ---
 
-## 📚 Librerías para el procesamiento de PDFs
-
-* **Si el PDF tiene texto seleccionable**
-    *  pypdf  -->  Permite unir, dividir y rotar pags., y gestionar metadatos.
-
----
-
-## 📋 Requisitos del Proyecto (12 Factor App)
-
-* **Codebase** Se debe contar con una única base de código, versionada en un repositorio.
-* **Dependencias** Todas las dependencias deben declararse explícitamente (mediante pyproject.toml, etc).
-* **Variables de Entorno** Utilizadas para configurar aspectos sensibles o particulares del entorno de ejecución.
-* **Configuraciones** Las configuraciones del sistema deben mantenerse separadas del código.
-* **Backing Services** Servicios externos como bases de datos, colas de mensajes, storage, etc, deben tratarse como recursos intercambiables.
-* **Construir, Desplegar, Ejecutar** preparar el proyecto, combinar build + configuracion, ejecutar.
-* **Procesos** Ejecutar como uno o mas procesos sin estados persistentes en memoria interna.
-* **Asignación de Puertos** La aplicación debe exponer servicios a través de puertos definidos.
-
----
-
-## 🧹 Código limpio
-
-* **DRY - Don't Repeat Yourself** Evitar duplicación de codigo y lógica innecesaria.
-* **KISS - Keep It Simple, Stupid** Mantener el código simple y claro, sin complejidades innecesarias.  
-* **YAGANI - You Aren't Gonna Need It** Programar únicamente lo que es necesario.
-* **SOLID -** Busca que el código sea como un juego de LEGO: piezas independientes que encajan perfectamente y que puedas cambiar sin tener que romper toda la estructura.
-
----
 
 *UTN - Facultad Regional San Rafael - Tercer año - Desarrollo de Software - Ingeniería en Sistemas de Información - 2026*
