@@ -1,3 +1,10 @@
+x-service-healthcheck: &svc-health
+  test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3)"]
+  interval: 5s
+  timeout: 3s
+  retries: 12
+  start_period: 5s
+
 services:
 
   traefik:
@@ -28,13 +35,35 @@ services:
       - mongo_data:/data/db
     networks:
       - extractext_net
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   consul:
-    image: hashicorp/consul:latest
+    image: hashicorp/consul:2.1
     container_name: extractext_consul
     ports:
       - "8500:8500"
     command: agent -dev -ui -client=0.0.0.0
+    networks:
+      - extractext_net
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  pdf-extractxt-redis:
+    image: redis:7-alpine
+    container_name: extractext_redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - extractext_net
 
@@ -51,10 +80,20 @@ services:
       STORAGE_TIMEOUT_SECONDS: 10
       INGESTION_TIMEOUT_SECONDS: 45
       WEB_CONCURRENCY: "2"
+      CONSUL_URL: http://consul:8500
+      SERVICE_NAME: api-gateway
+      REDIS_URL: redis://pdf-extractxt-redis:6379/0
+      CACHE_TTL_SECONDS: 60
     depends_on:
-      - pdf-extractxt-ingestion
-      - pdf-extractxt-storage
-      - consul
+      pdf-extractxt-ingestion:
+        condition: service_healthy
+      pdf-extractxt-storage:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+      pdf-extractxt-redis:
+        condition: service_healthy
+    healthcheck: *svc-health
     networks:
       - extractext_net
     labels:
@@ -62,6 +101,11 @@ services:
       - "traefik.http.routers.extractext.rule=Host(`extractext.localhost`)"
       - "traefik.http.routers.extractext.entrypoints=web"
       - "traefik.http.services.extractext.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.mw-retry.retry.attempts=3"
+      - "traefik.http.middlewares.mw-ratelimit.ratelimit.average=100"
+      - "traefik.http.middlewares.mw-ratelimit.ratelimit.burst=200"
+      - "traefik.http.middlewares.mw-cb.circuitbreaker.expression=NetworkErrorRatio() > 0.30 || ResponseCodeRatio(500, 600, 0, 600) > 0.25"
+      - "traefik.http.routers.extractext.middlewares=mw-ratelimit,mw-cb,mw-retry"
 
   pdf-extractxt-extractor:
     build:
@@ -72,8 +116,12 @@ services:
     environment:
       PDF_MAX_SIZE_MB: 10
       WEB_CONCURRENCY: "2"
+      CONSUL_URL: http://consul:8500
+      SERVICE_NAME: extractor
     depends_on:
-      - consul
+      consul:
+        condition: service_healthy
+    healthcheck: *svc-health
     networks:
       - extractext_net
 
@@ -89,10 +137,16 @@ services:
       STORAGE_TIMEOUT_SECONDS: 10
       EXTRACTOR_TIMEOUT_SECONDS: 30
       WEB_CONCURRENCY: "2"
+      CONSUL_URL: http://consul:8500
+      SERVICE_NAME: ingestion
     depends_on:
-      - pdf-extractxt-extractor
-      - pdf-extractxt-storage
-      - consul
+      pdf-extractxt-storage:
+        condition: service_healthy
+      pdf-extractxt-extractor:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    healthcheck: *svc-health
     networks:
       - extractext_net
 
@@ -108,15 +162,34 @@ services:
       LIST_DEFAULT_LIMIT: 50
       LIST_MAX_LIMIT: 100
       WEB_CONCURRENCY: "2"
+      CONSUL_URL: http://consul:8500
+      SERVICE_NAME: storage
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    healthcheck: *svc-health
     networks:
       - extractext_net
     deploy:
       replicas: 3
 
+  portainer:
+    image: portainer/portainer-ce:lts
+    container_name: extractext_portainer
+    restart: unless-stopped
+    ports:
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - extractext_net
+
 volumes:
   mongo_data:
+  portainer_data:
 
 networks:
   extractext_net:

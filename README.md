@@ -60,7 +60,7 @@ pdf-extractxt-storage:
 ```
 
 
-Esto cumple el Factor I (Codebase) de 12 Factor App: cada microservicio es una aplicación con su propia base de código, historial, tests y `dockerfile`. Este repositorio se encarga solo del monolito y de la **orquestación** (compose, Traefik, MongoDB y Consul).
+Esto cumple el Factor I (Codebase) de 12 Factor App: cada microservicio es una aplicación con su propia base de código, historial y `dockerfile`. Los tests automatizados (30 tests, 99% de cobertura) viven en este repositorio, sobre el monolito; los microservicios no tienen suite de tests propia. Este repositorio se encarga solo del monolito y de la **orquestación** (compose, Traefik, MongoDB y Consul).
 
 ## Infraestructura (docker-compose)
 
@@ -68,13 +68,29 @@ Esto cumple el Factor I (Codebase) de 12 Factor App: cada microservicio es una a
 | --- | --- |
 | `traefik` | Reverse proxy: enruta `extractext.localhost` hacia el API Gateway |
 | `mongo` | Base de datos MongoDB (con volumen persistente) |
-| `consul` | Descubrimiento de servicios (UI en el puerto 8500) |
+| `consul` | Registro de los 4 servicios y health checks (UI en `http://localhost:8500/ui`). Los servicios se siguen encontrando por variables de entorno; Consul no reemplaza ese mecanismo |
+| `portainer` | Administración de Docker vía web (HTTPS en el puerto 9443) |
+| `pdf-extractxt-redis` | Cache Redis (cache-aside para `GET /documents/{id}`) |
 | `pdf-extractxt-api` | API Gateway |
 | `pdf-extractxt-ingestion` | Servicio de ingestion |
 | `pdf-extractxt-extractor` | Servicio de extracción de texto |
 | `pdf-extractxt-storage` | Servicio de persistencia (3 réplicas) |
 
 Todos los contenedores comparten la red Docker `extractext_net`.
+
+## Patrones de resiliencia
+
+| Patrón | Dónde | Implementación |
+| --- | --- | --- |
+| **Retry** | Traefik | `mw-retry` reintenta hasta 3 veces las peticiones que llegan al API Gateway |
+| **Rate Limit** | Traefik | `mw-ratelimit` limita a 100 req/s con ráfagas de 200 (valor alto a propósito para no romper las pruebas de carga de k6) |
+| **Circuit Breaker** | Traefik | `mw-cb` abre el circuito si la tasa de errores de red supera 30% o la de respuestas 5xx supera 25% |
+| **Health checks** | Docker Compose | Cada servicio expone `GET /api/v1/health`; los `depends_on` usan `condition: service_healthy` para ordenar el arranque |
+| **Réplicas** | Storage | `deploy.replicas: 3` detrás del nombre DNS del servicio |
+| **Registro y health checks** | Consul | Cada instancia se registra con un ID único (hostname) y Consul consulta su `/api/v1/health` cada 10 s |
+| **Cache** | API Gateway + Redis | Cache-aside con TTL de 60 s en `GET /documents/{id}`; se invalida en `PUT` y `DELETE`; si Redis no responde, el gateway consulta directo a Storage |
+
+Consul se usa para **observar** el estado de las instancias, no para resolver dependencias: la comunicación entre servicios sigue usando las URLs de las variables de entorno.
 
 ## Estructura del proyecto (monolito)
 
@@ -128,7 +144,7 @@ extracText/
 | IX | **Disposability** | Contenedores descartables, con `restart: unless-stopped` |
 | X | **Paridad dev/prod** | Mismas imágenes y mismo MongoDB en desarrollo y despliegue, con Docker |
 | XI | **Logs** | Los servicios escriben en stdout (`docker compose logs`) |
-| XII | **Admin processes** | Scripts puntuales `seed.py` y `migrate.py` en el servicio storage |
+| XII | **Admin processes** | Scripts puntuales `seed.py` y `migrate.py` solo en el servicio storage (es el único que accede a MongoDB) |
 
 ## Código limpio
 
@@ -166,6 +182,9 @@ extracText/
 |---|---|---|
 | `traefik` | Reverse proxy / enrutamiento local | 1 |
 | `mongo` | Base de datos MongoDB | 1 |
+| `consul` | Registro de servicios y health checks (UI en `http://localhost:8500`) | 1 |
+| `portainer` | Administración de Docker (HTTPS en `https://localhost:9443`) | 1 |
+| `pdf-extractxt-redis` | Cache Redis (cache-aside en el gateway) | 1 |
 | `pdf-extractxt-api` | API Gateway (FastAPI) | 1 |
 | `pdf-extractxt-extractor` | PDF Extractor (FastAPI + pypdf) | 1 |
 | `pdf-extractxt-ingestion` | Ingestion (orquestación de subida) | 1 |
@@ -183,6 +202,8 @@ extracText/
 | Ver logs de un servicio | `docker compose logs -f pdf-extractxt-api` |
 | Reiniciar un servicio | `docker compose restart pdf-extractxt-api` |
 | Dashboard de Traefik | `http://localhost:8080` |
+| UI de Consul | `http://localhost:8500/ui` |
+| Portainer | `https://localhost:9443` |
 
 ### **Variables de entorno configurables**
 
@@ -197,6 +218,8 @@ Todas las variables se documentan en `.env.example`. Las principales:
 | `STORAGE_TIMEOUT_SECONDS` | api-gateway / ingestion | Timeout hacia Storage | `10` |
 | `INGESTION_TIMEOUT_SECONDS` | api-gateway | Timeout hacia Ingestion | `45` |
 | `EXTRACTOR_TIMEOUT_SECONDS` | ingestion | Timeout hacia Extractor | `30` |
+| `REDIS_URL` | api-gateway | URL del cache Redis | `redis://pdf-extractxt-redis:6379/0` |
+| `CACHE_TTL_SECONDS` | api-gateway | TTL del cache de documentos | `60` |
 | `PDF_MAX_SIZE_MB` | api-gateway / extractor | Tamaño máximo de PDF | `10` |
 | `LIST_DEFAULT_LIMIT` | storage | `limit` por defecto del listado | `50` |
 | `LIST_MAX_LIMIT` | storage | `limit` máximo del listado | `100` |
@@ -266,7 +289,7 @@ Abrir Docker Desktop, luego en PowerShell/terminal:
 docker compose up -d --build
 ```
 
-Esto levanta **6 contenedores** conectados entre sí por una **red Docker compartida** (`extractext_net`).
+Esto levanta el stack completo (**Traefik, MongoDB, Consul, Portainer y los 4 microservicios**, con 3 réplicas de storage) conectado por una **red Docker compartida** (`extractext_net`).
 
 ### **7. Verificar que todo está corriendo**
 
