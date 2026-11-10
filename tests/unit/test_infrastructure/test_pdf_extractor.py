@@ -21,7 +21,7 @@ def test_rejects_invalid_pdf_bytes():
 
 
 def test_extracts_text_from_real_pdf():
-    with open("pdfs_variants/2020-Scrum-Guide-Spanish-Latin-South-American_v1.pdf", "rb") as f:
+    with open("pdfs/2020-Scrum-Guide-Spanish-Latin-South-American.pdf", "rb") as f:
         text = validate_and_extract_text(f.read(), "scrum.pdf")
     assert isinstance(text, str)
     assert len(text) > 0

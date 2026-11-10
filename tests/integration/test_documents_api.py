@@ -33,7 +33,7 @@ async def test_get_nonexistent_document_returns_404(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_upload_same_pdf_twice_returns_409(client: AsyncClient):
-    with open("pdfs_variants/2020-Scrum-Guide-Spanish-Latin-South-American_v1.pdf", "rb") as f:
+    with open("pdfs/2020-Scrum-Guide-Spanish-Latin-South-American.pdf", "rb") as f:
         pdf_bytes = f.read()
 
     r1 = await client.post("/api/v1/documents/", files={"file": ("scrum.pdf", pdf_bytes, "application/pdf")})
